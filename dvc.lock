@@ -1,0 +1,85 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python src/prepare.py data/train.csv data/test.csv
+    deps:
+    - path: data/test.csv
+      md5: 029c9cd22461f6dbe8d9ab01def965c6
+      size: 28629
+    - path: data/train.csv
+      md5: 61fdd54abdbf6a85b778e937122e1194
+      size: 61194
+    - path: src/prepare.py
+      md5: 2330a1222c48daba935f47c0dafe242c
+      size: 1590
+    params:
+      params.yaml:
+        prepare.seed: 20170428
+        prepare.split: 0.2
+    outs:
+    - path: processed_data/prepared
+      md5: d9e4432fe0c0a0e4595b9e8d71ed83a4.dir
+      size: 120604
+      nfiles: 2
+  featurize:
+    cmd: python src/featurization.py processed_data/prepared processed_data/features
+    deps:
+    - path: processed_data/prepared
+      md5: d9e4432fe0c0a0e4595b9e8d71ed83a4.dir
+      size: 120604
+      nfiles: 2
+    - path: src/featurization.py
+      md5: 48cc155a87d0204a8fc2b5e09d1306db
+      size: 2387
+    params:
+      params.yaml:
+        featurize.max_features: 3000
+        featurize.ngrams: 2
+    outs:
+    - path: processed_data/features
+      md5: 72f5abd169058dad1680dbcb4bfc103a.dir
+      size: 117548
+      nfiles: 2
+  train:
+    cmd: python src/train.py processed_data/features models/model.pth
+    deps:
+    - path: processed_data/features
+      md5: 72f5abd169058dad1680dbcb4bfc103a.dir
+      size: 117548
+      nfiles: 2
+    - path: src/train.py
+      md5: ebb82dcbfc74f367f84ef345bb7ad617
+      size: 2880
+    params:
+      params.yaml:
+        train.min_split: 64
+        train.n_est: 700
+        train.seed: 20170428
+    outs:
+    - path: models/model.pth
+      md5: 2043be9d9830802871c10aae8aaf5028
+      size: 2015
+  evaluate:
+    cmd: python src/evaluate.py models/model.pth processed_data/features scores.json
+      prc.json roc.json
+    deps:
+    - path: models/model.pth
+      md5: 2043be9d9830802871c10aae8aaf5028
+      size: 2015
+    - path: processed_data/features
+      md5: 72f5abd169058dad1680dbcb4bfc103a.dir
+      size: 117548
+      nfiles: 2
+    - path: src/evaluate.py
+      md5: a50378cd5facdfa901061331bbca8092
+      size: 2899
+    outs:
+    - path: prc.json
+      md5: f1dcb8444d31d910be4ca4a07a89ee4e
+      size: 281
+    - path: roc.json
+      md5: 9cfa640d1a330ab2724bed9e4e688612
+      size: 346
+    - path: scores.json
+      md5: 4a32b8eb40db55e0c03994101fb6869d
+      size: 73

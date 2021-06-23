@@ -1,0 +1,52 @@
+stages:
+  prepare:
+    cmd: python src/prepare.py data/train.csv data/test.csv
+    deps:
+    - data/train.csv
+    - data/test.csv
+    - src/prepare.py
+    params:
+    - prepare.seed
+    - prepare.split
+    outs:
+    - processed_data/prepared
+  featurize:
+    cmd: python src/featurization.py processed_data/prepared processed_data/features
+    deps:
+    - processed_data/prepared
+    - src/featurization.py
+    params:
+    - featurize.max_features
+    - featurize.ngrams
+    outs:
+    - processed_data/features
+  train:
+    cmd: python src/train.py processed_data/features models/model.pth
+    deps:
+    - processed_data/features
+    - src/train.py
+    params:
+    - train.min_split
+    - train.n_est
+    - train.seed
+    outs:
+    - models/model.pth
+  evaluate:
+    cmd: python src/evaluate.py models/model.pth processed_data/features scores.json
+      prc.json roc.json
+    deps:
+    - models/model.pth
+    - processed_data/features
+    - src/evaluate.py
+    metrics:
+    - scores.json:
+        cache: false
+    plots:
+    - prc.json:
+        cache: false
+        x: recall
+        y: precision
+    - roc.json:
+        cache: false
+        x: fpr
+        y: tpr
